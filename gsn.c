@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <errno.h>
 
 int main(int argc, char *argv[]) {
 
@@ -24,40 +23,59 @@ int main(int argc, char *argv[]) {
         if (n <= 0) { // Checamos se o argumento fornecido (número aleatório de bytes) é diferente ou maior que zero. Se for igual ou menor que zero, o programa termina. Se for maior, o programa continua.
             printf("Erro: n <= 0!\n");
             exit(1);
-        } else {
-            printf("O argumento fornecido é: %d\n", n);
-            int pidB = fork();
+...
+    } else {
+        printf("O argumento fornecido é: %d\n", n);
+        int pidB = fork();
 
-            if (pidB > 0) {
-                // Código do processo pai (Processo A)
-                printf("Processo A: PID=%d  PPID=%d\n", getpid(), getppid());
+        if (pidB > 0) {
+            // Código do processo pai (Processo A)
+            printf("Processo A: PID=%d  PPID=%d\n", getpid(), getppid());
+            wait(NULL);
+
+            // Processo C - Executando hexdump no arquivo tmp.bin
+            int pidC = fork();
+            if (pidC == 0) {
+                printf("Processo C: PID=%d PPID=%d\n", getpid(), getppid());
+
+                // Redirecionando a saída padrão para o arquivo "tmp.txt"
+                FILE *saidaC = freopen("tmp.txt", "w", stdout);
+
+                // Verificando se a abertura do arquivo foi bem sucedida
+                if (saidaC == NULL) {
+                    printf("Erro ao abrir o arquivo tmp.txt. Fim do programa!\n");
+                    exit(1);
+                }
+
+                // Executando o comando hexdump no arquivo tmp.bin
+                execl("/usr/bin/hexdump", "hexdump", "tmp.bin", NULL);
+
+                // A linha abaixo só será executada se houver um erro na chamada do exec
+                printf("Erro no execl. Fim do programa!\n");
+                exit(1);
+            } else {
+                wait(NULL);
+            }
+
+            // Processo D - Lendo o conteúdo do arquivo tmp.txt e imprimindo os números na tela em ordem crescente
+            int pidD = fork();
+            if (pidD == 0) {
+                printf("Processo D: PID=%d PPID=%d\n", getpid(), getppid());
+
+                // Aguardando processos B e C terminarem
+                wait(NULL);
                 wait(NULL);
 
-                // Processo C - Executando hexdump no arquivo tmp.bin
-                int pidC = fork();
-                if (pidC == 0) {
-                    printf("Processo C: PID=%d PPID=%d\n", getpid(), getppid());
+                // Executando o comando "sort" no arquivo "tmp.txt"
+                execlv("/usr/bin/sort", "sort", "-n", "tmp.txt", NULL);
 
-                    // Redirecionando a saída padrão para o arquivo "tmp.txt"
-                    FILE *saidaC = freopen("tmp.txt", "w", stdout);
-
-                    // Verificando se a abertura do arquivo foi bem sucedida
-                    if (saidaC == NULL) {
-                        printf("Erro ao abrir o arquivo tmp.txt. Fim do programa!\n");
-                        exit(1);
-                    }
-
-                    // Executando o comando hexdump no arquivo tmp.bin
-                    execlp("hexdump", "hexdump", "tmp.bin", NULL);
-
-                    // A linha abaixo só será executada se houver um erro na chamada do exec
-                    printf("Erro no exec. Fim do programa!\n");
-                    exit(1);
-
-                } else {
-                    wait(NULL);
-                }
-            } else if (pidB == 0) {
+                // Encerrando o processo D em caso de erro
+                printf("Erro ao executar o comando sort. Fim do programa!\n");
+                exit(1);
+            } else {
+                wait(NULL);
+            }
+        } else if (pidB == 0) {
                 // Código do processo filho (Processo B)
                 printf("Processo B: PID=%d PPID=%d\n", getpid(), getppid());
 
@@ -85,10 +103,10 @@ int main(int argc, char *argv[]) {
                 fclose(saidaB);
 
                 // A linha abaixo só será executada se houver um erro na chamada do exec
-                printf("Erro no exec. Fim do programa!\n");
+                printf("Erro no execlp. Fim do programa!\n");
                 exit(1);
             } else {
-                printf("Erro no exec: %s. Fim do programa!\n", strerror(errno));
+                printf("Erro. Fim do programa!\n");
                 exit(1);
                 }
         }
