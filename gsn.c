@@ -13,20 +13,20 @@
 
 int main(int argc, char *argv[]) {
 
-    // Aqui checamos se temos os dois argumentos (nome do programa e número de bytes). Se não tiver exatamente 2, o programa termina.
+    // Checagem dos dois argumentos (nome do programa e número de bytes). Se não tiver exatamente 2, o programa termina.
     if (argc != 2) {
         printf("Erro na execução do programa.\n");
         exit(1);
     } else {
-        int n = atoi(argv[1]); // Aqui, precisamos converter o vetor argv[1], que é uma string, para um inteiro para que possamos comparar com zero. Para isso, utilizamos a função da stdlib atoi().
+        int n = atoi(argv[1]); // Conversão do vetor argv[1], que é uma string, para um inteiro para que possamos comparar com zero. Para isso, utilizamos a função da stdlib atoi().
 
         if (n <= 0) { // Checamos se o argumento fornecido (número aleatório de bytes) é diferente ou maior que zero. Se for igual ou menor que zero, o programa termina. Se for maior, o programa continua.
             printf("Erro: n <= 0!\n");
             exit(1);
 ...
     } else {
-        printf("O argumento fornecido é: %d\n", n);
-        int pidB = fork();
+        printf("O argumento fornecido é: %d\n", n); //Temos o número de bytes (n)
+        int pidB = fork(); //Criação do processo B
 
         if (pidB > 0) {
             // Código do processo pai (Processo A)
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
             wait(NULL);
 
             // Processo C - Executando hexdump no arquivo tmp.bin
-            int pidC = fork();
+            int pidC = fork(); // Criação do processo C
             if (pidC == 0) {
                 printf("Processo C: PID=%d PPID=%d\n", getpid(), getppid());
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
                 // Executando o comando hexdump no arquivo tmp.bin
                 execl("/usr/bin/hexdump", "hexdump", "tmp.bin", NULL);
 
-                // A linha abaixo só será executada se houver um erro na chamada do exec
+                // A linha abaixo só será executada se houver um erro na chamada do execl
                 printf("Erro no execl. Fim do programa!\n");
                 exit(1);
             } else {
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
             }
 
             // Processo D - Lendo o conteúdo do arquivo tmp.txt e imprimindo os números na tela em ordem crescente
-            int pidD = fork();
+            int pidD = fork(); //Criação do processo D
             if (pidD == 0) {
                 printf("Processo D: PID=%d PPID=%d\n", getpid(), getppid());
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
                 printf("Erro no execlp. Fim do programa!\n");
                 exit(1);
             } else {
-                printf("Erro. Fim do programa!\n");
+                printf("Erro. Fim do programa!\n"); //Caso exista algum tipo de erro na criação dos processos
                 exit(1);
                 }
         }
