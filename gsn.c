@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
                 char leitura[n];
                 fread(leitura, sizeof(char), n, stdout);
                     for (int i = 0; i < n; i++) {
-                        printf("%d ", leitura[i]);
+                        printf("%u\n", (unsigned int)leitura[i]);
                     }
                     printf("\n");
 
