@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <string.h>
 
 int main(int argc, char *argv[]) {
 
@@ -92,10 +91,10 @@ int main(int argc, char *argv[]) {
                 execlp("head", "head", "-c", argv[1], "/dev/urandom", NULL);
 
                 // Lendo o conteúdo do arquivo e imprimindo na tela
-                char buffer[n];
-                fread(buffer, sizeof(char), n, stdout);
+                char leitura[n];
+                fread(leitura, sizeof(char), n, stdout);
                     for (int i = 0; i < n; i++) {
-                        printf("%d ", buffer[i]);
+                        printf("%d ", leitura[i]);
                     }
                     printf("\n");
 
