@@ -25,15 +25,42 @@ int main(int argc, char *argv[]) {
 ...
     } else {
         printf("O argumento fornecido é: %d\n", n); //Temos o número de bytes (n)
+
+        // Código do processo pai (Processo A)
+        printf("Processo A: PID=%d  PPID=%d\n", getpid(), getppid());
+        wait(NULL);
+
         int pidB = fork(); //Criação do processo B
 
-        if (pidB > 0) {
-            // Código do processo pai (Processo A)
-            printf("Processo A: PID=%d  PPID=%d\n", getpid(), getppid());
-            wait(NULL);
+            if (pidB == 0) {
+                // Código do processo filho (Processo B)
+                printf("Processo B: PID=%d PPID=%d\n", getpid(), getppid());
 
-            // Processo C - Executando hexdump no arquivo tmp.bin
-            int pidC = fork(); // Criação do processo C
+                // Redirecionando a saída padrão para o arquivo "tmp.bin"
+                FILE *saidaB = freopen("tmp.bin", "w", stdout);
+
+                // Verificando se a abertura do arquivo foi bem sucedida
+                if (saidaB == NULL) {
+                    printf("Erro ao abrir o arquivo tmp.bin. Fim do programa!\n");
+                    exit(1);
+                }
+
+                // Usando head para gerar a lista de bytes no arquivo
+                execlp("head", "head", "-c", argv[1], "/dev/urandom", NULL);
+
+                // A linha abaixo só será executada se houver um erro na chamada do exec
+                printf("Erro no execlp. Fim do programa!\n");
+                exit(1);
+            } else {
+                    printf("Erro na criação do processo B. Fim do programa!\n"); //Caso exista algum tipo de erro na criação do processo B
+                    exit(1);
+                }
+            
+        waitpid(pidB, NULL, 0);
+
+        // Processo C - Executando hexdump no arquivo tmp.bin
+        int pidC = fork(); // Criação do processo C
+            
             if (pidC == 0) {
                 printf("Processo C: PID=%d PPID=%d\n", getpid(), getppid());
 
@@ -53,62 +80,42 @@ int main(int argc, char *argv[]) {
                 printf("Erro no execl. Fim do programa!\n");
                 exit(1);
             } else {
-                wait(NULL);
+                printf("Erro na criação do processo C. Fim do programa!\n"); //Caso exista algum tipo de erro na criação do processo C
+                exit(1);
             }
+
+        waitpid(pidC, NULL, 0);
 
             // Processo D - Lendo o conteúdo do arquivo tmp.txt e imprimindo os números na tela em ordem crescente
             int pidD = fork(); //Criação do processo D
-            if (pidD == 0) {
-                printf("Processo D: PID=%d PPID=%d\n", getpid(), getppid());
+                if (pidD == 0) {
+                    printf("Processo D: PID=%d PPID=%d\n", getpid(), getppid());
 
-                // Aguardando processos B e C terminarem
-                wait(NULL);
-                wait(NULL);
+                    freopen("tmp.txt", "r", stdin);
 
-                // Executando o comando "sort" no arquivo "tmp.txt"
-                execlv("/usr/bin/sort", "sort", "-n", "tmp.txt", NULL);
+                    // Executando o comando "sort" no arquivo "tmp.txt"
+                    execlv("/usr/bin/sort", "sort", "-n", "tmp.txt", NULL);
 
-                // Encerrando o processo D em caso de erro
-                printf("Erro ao executar o comando sort. Fim do programa!\n");
-                exit(1);
-            } else {
-                wait(NULL);
-            }
-        } else if (pidB == 0) {
-                // Código do processo filho (Processo B)
-                printf("Processo B: PID=%d PPID=%d\n", getpid(), getppid());
-
-                // Redirecionando a saída padrão para o arquivo "tmp.bin"
-                FILE *saidaB = freopen("tmp.bin", "w", stdout);
-
-                // Verificando se a abertura do arquivo foi bem sucedida
-                if (saidaB == NULL) {
-                    printf("Erro ao abrir o arquivo tmp.bin. Fim do programa!\n");
+                    // Encerrando o processo D em caso de erro
+                    printf("Erro ao executar o comando sort. Fim do programa!\n");
+                    exit(1);
+                } else {
+                    printf("Erro na criação do processo D. Fim do programa!\n"); //Caso exista algum tipo de erro na criação do processo D
                     exit(1);
                 }
 
-                // Usando head para gerar a lista de bytes no arquivo
-                execlp("head", "head", "-c", argv[1], "/dev/urandom", NULL);
+        waitpid(pidD, NULL, 0);
 
                 // Lendo o conteúdo do arquivo e imprimindo na tela
-                char leitura[n];
-                fread(leitura, sizeof(char), n, stdout);
-                    for (int i = 0; i < n; i++) {
-                        printf("%u\n", (unsigned int)leitura[i]);
-                    }
-                    printf("\n");
-
-                // Fechando os arquivos
-                fclose(saidaB);
-
-                // A linha abaixo só será executada se houver um erro na chamada do exec
-                printf("Erro no execlp. Fim do programa!\n");
-                exit(1);
-            } else {
-                printf("Erro. Fim do programa!\n"); //Caso exista algum tipo de erro na criação dos processos
-                exit(1);
+            FILE *leitura;
+                leitura = fopen("tmp.txt", "r");
+                int numeros;
+                while (fscanf(leitura, "%d", &numeros) != EOF) {
+                    printf("%d\n", numeros);
                 }
-        }
-    }
+                
+                fclose(leitura);
+                fclose(saidaB);
+                fclose(saidaC);
     return 0;
 }
