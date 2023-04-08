@@ -16,13 +16,12 @@ int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Erro na execução do programa.\n");
         exit(1);
-    } else {
+    } else if {
         int n = atoi(argv[1]); // Conversão do vetor argv[1], que é uma string, para um inteiro para que possamos comparar com zero. Para isso, utilizamos a função da stdlib atoi().
 
         if (n <= 0) { // Checamos se o argumento fornecido (número aleatório de bytes) é diferente ou maior que zero. Se for igual ou menor que zero, o programa termina. Se for maior, o programa continua.
             printf("Erro: n <= 0!\n");
-            exit(1);
-...
+            exit(1);            
     } else {
         printf("O argumento fornecido é: %d\n", n); //Temos o número de bytes (n)
 
@@ -117,5 +116,7 @@ int main(int argc, char *argv[]) {
                 fclose(leitura);
                 fclose(saidaB);
                 fclose(saidaC);
-    return 0;
+        }
+    }
+        return 0;
 }
